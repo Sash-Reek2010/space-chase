@@ -19,8 +19,7 @@ let gameOver = false;
 let gameStarted = false;
 let shield = false;
 let double = false;
-let magnet = false;
-let clear = false;
+let bomb = false;
 let powerupMessage = '';
 let powerupTimer = 0;
 let personalBest = localStorage.getItem("best") || 0;
@@ -52,7 +51,7 @@ function drawPlayer() {
     ctx.fillStyle = "#ff6600"
     ctx.beginPath();
     ctx.moveTo(player.x + 12, player.y + 40);
-    ctx.lineTo(player.x + 18, player.y + 52); // center
+    ctx.lineTo(player.x + 18, player.y + 52);
     ctx.lineTo(player.x + 24, player.y + 40);
     ctx.closePath();
     ctx.fill();
@@ -101,62 +100,64 @@ function updateItems() {
             item.y < player.y + player.height 
         ) {
 
-            if (item.type === "shield") {
-                shield = true;
-                items.splice(index, 1);
-                powerupMessage = 'SHIELD ACTIVATED'
-                powerupTimer = 120
-                return;
-            }
+        if (item.type === "shield") {
+            shield = true;
+            items.splice(index, 1);
+            powerupMessage = 'SHIELD ACTIVATED'
+            powerupTimer = 120
+            return;
+        }
 
-            if (item.points < 0 && shield) {
-                shield = false;
-                items.splice(index, 1);
-                return;
-            }
+        if (item.points < 0 && shield) {
+            shield = false;
+            items.splice(index, 1);
+            return;
+        }
 
-            if (item.type === "double") {
-                double = true;
-                powerupMessage = 'DOUBLE POINTS'
-                powerupTimer = 120
+        if (item.type === "double") {
+            double = true;
+            powerupMessage = 'DOUBLE POINTS'
+            powerupTimer = 120
 
-                setTimeout(() => {
-                    double = false;
-                }, 10000);
-
-                items.splice(index, 1);
-                return;
-            }
-
-            if (item.type === "bomb") {
-                items.length = 0;
-                powerupMessage = 'OO EXPLOSIONS!'
-                powerupTimer = 120
-                return;
-            }
-
-            let points = item.points;
-
-            if (double && points > 0) {
-                points *= 2;
-            }
-
-            score += points;
+            setTimeout(() => {
+                double = false;
+            }, 10000);
 
             items.splice(index, 1);
-            
-            if (score > maxScore) {
-                maxScore = score;
-            }
-
-            if (score < 0) {
-                if (maxScore > personalBest) {
-                    personalBest = maxScore;
-                    localStorage.setItem("best", personalBest);
-                }
-                gameOver = true;
-            }
+            return;
         }
+
+        if (item.type === "bomb") {
+            bomb = true;
+            items.length = 0;
+            powerupMessage = 'OO EXPLOSIONS!'
+            powerupTimer = 120
+            return;
+        }
+
+        let points = item.points;
+
+        if (double && points > 0) {
+            points *= 2;
+        }
+
+        score += points;
+
+        items.splice(index, 1);
+            
+        if (score > maxScore) {
+            maxScore = score;
+        }
+
+        if (score < 0) {
+            if (maxScore > personalBest) {
+                personalBest = maxScore;
+                localStorage.setItem("best", personalBest);
+            }
+            gameOver = true;
+        }
+    }
+    
         if (item.y > canvas.height) {
             items.splice(index, 1);
         }
