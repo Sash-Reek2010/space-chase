@@ -17,6 +17,10 @@ let score = 0;
 let maxScore = 0;
 let gameOver = false;
 let gameStarted = false;
+let shield = false;
+let double = false;
+let magnet = false;
+let clear = false;
 
 function drawPlayer() {
     ctx.fillStyle = "#fff";
@@ -82,6 +86,30 @@ function updateItems() {
             item.y > player.y &&
             item.y < player.y + player.height 
         ) {
+
+            if (item.type === "shield") {
+                shield = true;
+                items.splice(index, 1);
+                return;
+            }
+
+            if (item.points < 0 && shield) {
+                shield = false;
+                items.splice(index, 1);
+                return;
+            }
+
+            let points = item.points;
+
+            if (double && points > 0) {
+                points *= 2;
+            }
+            
+
+            if (item.type === "bomb") {
+                items.length = 0;
+            }
+
             items.splice(index, 1);
             score += item.points;
             
@@ -111,6 +139,117 @@ function createAsteroid1() {
     })
 }
 
+function createAsteroid2() {
+    items.push({
+        x: Math.random() * (canvas.width - 20),
+        y: -20,
+        radius: 25,
+        dy: 1,
+        color: '#70717e',
+        points: -5
+    })
+}
+
+function createSpaceDebris() {
+    items.push({
+        x: Math.random() * (canvas.width - 20),
+        y: -20,
+        radius: 20,
+        dy: 4,
+        color: '#645d5d',
+        points: -20
+    })
+}
+
+function createSunFlare() {
+    items.push({
+        x: Math.random() * (canvas.width - 20),
+        y: -20,
+        radius: 150,
+        dy: 0.5,
+        color: '#ffb702',
+        points: -2
+
+    })
+}
+
+function createStardust() {
+    items.push({
+        x: Math.random() * (canvas.width - 20),
+        y: -20,
+        radius: 10,
+        dy: 2,
+        color: '#21f0d8',
+        points: 3
+    })
+}
+
+function createSpaceCrystals() {
+    items.push({
+        x: Math.random() * (canvas.width - 20),
+        y: -20,
+        radius: 15,
+        dy: 4,
+        color: '#fb05ff',
+        points: 5
+    })
+}
+
+function createSpaceGold() {
+    items.push({
+        x: Math.random() * (canvas.width - 20),
+        y: -20,
+        radius: 5,
+        dy: 6,
+        color: '#ffae00',
+        points: 10
+    })
+}
+
+function createComets() {
+    items.push({
+        x: Math.random() * (canvas.width - 20),
+        y: -20,
+        radius: 20,
+        dy: 3,
+        color: '#a6d0ff',
+        points: 12
+    })
+}
+
+function createShield() {
+    items.push({
+        x: Math.random() * (canvas.width - 20),
+        y: -20,
+        radius: 12, 
+        dy: 3,
+        color: '#ff0000',   
+        type: 'shield'
+    })
+}
+
+function createDouble() {
+    items.push({
+        x: Math.random() * (canvas.width - 20),
+        y: -20,
+        radius: 20, 
+        dy: 3,
+        color: '#000dff',   
+        type: 'double'
+    })
+}
+
+function createBomb() {
+    items.push({
+        x: Math.random() * (canvas.width - 20),
+        y: -20,
+        radius: 30, 
+        dy: 3,
+        color: '#00ff0d',   
+        type: 'bomb'
+    })
+}
+
 function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -135,7 +274,17 @@ document.addEventListener('keyup', () => {
 });
 
 function startSpawning() {
-    setInterval(createAsteroid1, 1000);
+    setInterval(createAsteroid1, 3000);
+    setInterval(createAsteroid2, 2500);
+    setInterval(createComets, 5000);
+    setInterval(createSpaceCrystals, 1500);
+    setInterval(createSpaceDebris, 1500);
+    setInterval(createSpaceGold, 2500);
+    setInterval(createStardust, 1000);
+    setInterval(createSunFlare, 20000);
+    setInterval(createShield, 15000);
+    setInterval(createDouble, 20000);
+    setInterval(createBomb, 25000);
 }
 
 
