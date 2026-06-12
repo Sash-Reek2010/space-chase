@@ -12,8 +12,17 @@ const player = {
     height: 52,
 };
 
+const player2 = {
+    x: canvas.width / 2 + 60,
+    y: canvas.height - 50,
+    dx: 0,
+    width: 36,
+    height: 52,
+};
+
 const items = [];
 let score = 0;
+let score2 = 0;
 let maxScore = 0;
 let gameOver = false;
 let gameStarted = false;
@@ -24,7 +33,12 @@ let powerupMessage = '';
 let powerupTimer = 0;
 let personalBest = localStorage.getItem("best") || 0;
 
-function drawPlayer() {
+let multiplayer = false;
+let shield2 = false;
+let double2 = false;
+
+
+function drawPlayer(player) {
     ctx.fillStyle = "#fff";
     ctx.fillRect(player.x + 8, player.y + 10, 20, 30);
     ctx.fillStyle = "#f4290f";
@@ -66,7 +80,7 @@ function drawItems() {
     });
 }
 
-function drawScore() {
+function drawScore(score) {
     ctx.fillStyle = "#fff"
     ctx.font = 'bold 20px Arial';
     ctx.textAlign = "left";
@@ -83,7 +97,7 @@ function drawPowerupMessage() {
     }
 }
 
-function updatePlayer() {
+function updatePlayer(player) {
     player.x += player.dx;
     if (player.x < 0) player.x = 0;
     if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
@@ -93,6 +107,8 @@ function updatePlayer() {
 function updateItems() {
     items.forEach((item, index) => {
         item.y += item.dy;
+
+
         if (
             item.x > player.x &&
             item.x < player.x + player.width &&
@@ -100,63 +116,125 @@ function updateItems() {
             item.y < player.y + player.height 
         ) {
 
-        if (item.type === "shield") {
-            shield = true;
-            items.splice(index, 1);
-            powerupMessage = 'SHIELD ACTIVATED'
-            powerupTimer = 120
-            return;
-        }
-
-        if (item.points < 0 && shield) {
-            shield = false;
-            items.splice(index, 1);
-            return;
-        }
-
-        if (item.type === "double") {
-            double = true;
-            powerupMessage = 'DOUBLE POINTS'
-            powerupTimer = 120
-
-            setTimeout(() => {
-                double = false;
-            }, 10000);
-
-            items.splice(index, 1);
-            return;
-        }
-
-        if (item.type === "bomb") {
-            bomb = true;
-            items.length = 0;
-            powerupMessage = 'OO EXPLOSIONS!'
-            powerupTimer = 120
-            return;
-        }
-
-        let points = item.points;
-
-        if (double && points > 0) {
-            points *= 2;
-        }
-
-        score += points;
-
-        items.splice(index, 1);
-            
-        if (score > maxScore) {
-            maxScore = score;
-        }
-
-        if (score < 0) {
-            if (maxScore > personalBest) {
-                personalBest = maxScore;
-                localStorage.setItem("best", personalBest);
+            if (item.type === "shield") {
+                shield = true;
+                items.splice(index, 1);
+                powerupMessage = 'SHIELD ACTIVATED';
+                powerupTimer = 120;
+                return;
             }
-            gameOver = true;
+
+            if (item.points < 0 && shield) {
+                shield = false;
+                items.splice(index, 1);
+                return;
+            }
+
+            if (item.type === "double") {
+                double = true;
+                powerupMessage = 'DOUBLE POINTS';
+                powerupTimer = 120;
+
+                setTimeout(() => {
+                    double = false;
+                }, 10000);
+
+                items.splice(index, 1);
+                return;
+            }
+
+            if (item.type === "bomb") {
+                bomb = true;
+                items.length = 0;
+                powerupMessage = 'OO EXPLOSIONS!';
+                powerupTimer = 120;
+                return;
+            }
+
+            let points = item.points;
+
+            if (double && points > 0) {
+                points *= 2;
+            }
+
+            score += points;
+
+            items.splice(index, 1);
+
+            
+            if (score > maxScore) {
+                maxScore = score;
+            }
+
+            if (score < 0) {
+                if (maxScore > personalBest) {
+                    personalBest = maxScore;
+                    localStorage.setItem("best", personalBest);
+                }
+
+                gameOver = true;
+            }
+
+            return;
+
         }
-    }
+
+        if (
+            multiplayer &&
+            item.x > player2.x && 
+            item.x < player2.x + player2.width &&
+            item.y > player2.y &&
+            item.y < player2.y + player2.height
+        ) {
+
+            if (item.type === 'shield') {
+                shield2 = true;
+                items.splice(index, 1);
+                powerupMessage = 'SHIELD ACTIVATED P2';
+                powerupTimer = 120;
+                return;
+            }
+
+            if (item.points < 0 && shield2) {
+                shield2 = false;
+                items.splice(index, 1);
+                return;
+            }
+
+            if (item.type === 'double') {
+                double2 = true;
+                powerupMessage = 'DOUBLE POINTS P2';
+                powerupTimer = 120;
+
+                setTimeout(() => {
+                    double2 = false;
+                }, 10000);
+
+                items.splice(index, 1);
+                return;
+            }
+
+            if (item.type === 'bomb') {
+                bomb = true;
+                items.length = 0;
+                powerupMessage = "OO EXPLOSIONS!";
+                powerupTimer = 120;
+                return;
+            }
+
+            let points = item.points;
+
+            if (double2 && points > 0) {
+                points *= 2;
+            }
+
+            score2 += points;
+
+            items.splice(index, 1);
+
+            return;
+         }
+    
     
         if (item.y > canvas.height) {
             items.splice(index, 1);
@@ -356,12 +434,21 @@ function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
 
-    updatePlayer();
+    updatePlayer(player);
+    if (multiplayer) {
+        updatePlayer(player2);
+    }
     updateItems();
 
-    drawPlayer();
+    drawPlayer(player);
+    if (multiplayer) {
+        drawPlayer(player2);
+    }
     drawItems();
-    drawScore();
+    drawScore(score);
+    if (multiplayer) {
+        drawScore(score2);
+    }
     drawPowerupMessage();
 
     requestAnimationFrame(gameLoop);
@@ -371,17 +458,30 @@ function gameLoop() {
 document.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowLeft') player.dx = -5;
     if (e.key === 'ArrowRight') player.dx = 5;
+
+    if (e.key === 'a') player2.dx = -5;
+    if (e.key === 'd') player2.dx = 5;
+
     if (gameOver && e.key.toLowerCase() === 'r') {
         location.reload();
     }
     if (e.code === 'Space') {
+        multiplayer = false;
         gameStarted = true;
         startSpawning();
     }
+    if (e.key === '2') {
+        multiplayer = true;
+        gameStarted = true;
+        startSpawning();
+    }
+
 });
 
-document.addEventListener('keyup', () => {
-    player.dx = 0;
+document.addEventListener('keyup', (e) => {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') player.dx = 0;
+    if (e.key === 'a' || e.key === 'd') player2.dx = 0;
+
 });
 
 function startSpawning() {
