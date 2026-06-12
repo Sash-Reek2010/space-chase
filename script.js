@@ -10,6 +10,7 @@ const player = {
     dx: 0,
     width: 36,
     height: 52,
+    finColor: '#00ff5e'
 };
 
 const player2 = {
@@ -18,11 +19,12 @@ const player2 = {
     dx: 0,
     width: 36,
     height: 52,
+    finColor: '#006aff'
 };
 
 const items = [];
-let score = 0;
-let score2 = 0;
+let score = 1;
+let score2 = 1;
 let maxScore = 0;
 let gameOver = false;
 let gameStarted = false;
@@ -32,13 +34,14 @@ let bomb = false;
 let powerupMessage = '';
 let powerupTimer = 0;
 let personalBest = localStorage.getItem("best") || 0;
+let winner = '';
+let finColor = '';
 
 let multiplayer = false;
 let shield2 = false;
 let double2 = false;
 
-
-function drawPlayer(player) {
+function drawPlayer(player, label) {
     ctx.fillStyle = "#fff";
     ctx.fillRect(player.x + 8, player.y + 10, 20, 30);
     ctx.fillStyle = "#f4290f";
@@ -49,7 +52,7 @@ function drawPlayer(player) {
     ctx.closePath();
     ctx.fill();
     ctx.fill();
-    ctx.fillStyle = "#0ce349";
+    ctx.fillStyle = player.finColor;
     ctx.beginPath();
     ctx.moveTo(player.x + 8, player.y + 30);
     ctx.lineTo(player.x, player.y +40);
@@ -69,6 +72,10 @@ function drawPlayer(player) {
     ctx.lineTo(player.x + 24, player.y + 40);
     ctx.closePath();
     ctx.fill();
+    ctx.fillStyle = "#fff"
+    ctx.font = "bold 14px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText(label, player.x + player.width / 2, player.y - 10);    
 } 
 
 function drawItems() {
@@ -80,11 +87,11 @@ function drawItems() {
     });
 }
 
-function drawScore(score) {
+function drawScore(score, x) {
     ctx.fillStyle = "#fff"
     ctx.font = 'bold 20px Arial';
     ctx.textAlign = "left";
-    ctx.fillText('Score: ' + score, 10, 30);
+    ctx.fillText('Score: ' + score, x, 30);
 }
 
 function drawPowerupMessage() {
@@ -161,20 +168,20 @@ function updateItems() {
 
             items.splice(index, 1);
 
-            
-            if (score > maxScore) {
-                maxScore = score;
-            }
-
-            if (score < 0) {
-                if (maxScore > personalBest) {
-                    personalBest = maxScore;
-                    localStorage.setItem("best", personalBest);
+            if (!multiplayer) {
+                if (score > maxScore) {
+                    maxScore = score;
                 }
 
-                gameOver = true;
-            }
+                if (score < 0) {
+                    if (maxScore > personalBest) {
+                        personalBest = maxScore;
+                        localStorage.setItem("best", personalBest);
+                    }
 
+                    gameOver = true;
+                }
+            }
             return;
 
         }
@@ -238,6 +245,18 @@ function updateItems() {
     
         if (item.y > canvas.height) {
             items.splice(index, 1);
+        }
+
+        if (multiplayer) {
+            if (score <= 0) {
+                winner = 'PLAYER 2';
+                gameOver = true;
+            }
+
+            if (score2 <= 0) {
+                winner = 'PLAYER 1';
+                gameOver = true;
+            }
         }
     });
 }
@@ -373,41 +392,42 @@ function gameLoop() {
         ctx.fillStyle = '#000'
         ctx.font = 'bold 30px Arial';
         ctx.textAlign = "center";
-        ctx.fillText('Space Catch', 210, 100);
+        ctx.fillText('Space Catch', 210, 80);
 
         ctx.font = 'bold 18px Arial';
 
         ctx.fillStyle = '#2d2d2d'
         ctx.textAlign = "center";
-        ctx.fillText('Meteors = -5/-20', 205, 220);
+        ctx.fillText('Meteors = -5/-20', 205, 120);
         ctx.fillStyle = '#ffb702'
         ctx.textAlign = "center";
-        ctx.fillText('Sun Flare = -2', 205, 250);
+        ctx.fillText('Sun Flare = -2', 205, 150);
         ctx.fillStyle = '#fb05ff'
         ctx.textAlign = "center";
-        ctx.fillText('Space Crystals = +5', 205, 280);
+        ctx.fillText('Space Crystals = +5', 205, 180);
         ctx.fillStyle = '#ffae00'
         ctx.textAlign = "center";
-        ctx.fillText('Space Gold = +10', 205, 310);
+        ctx.fillText('Space Gold = +10', 205, 210);
         ctx.fillStyle = '#21f0d8'
         ctx.textAlign = "center";
-        ctx.fillText('Star Dust = +3', 205, 340); 
+        ctx.fillText('Star Dust = +3', 205, 240); 
         ctx.fillStyle = '#455d77'
         ctx.textAlign = "center";
-        ctx.fillText('Comets = +3', 205, 370);
+        ctx.fillText('Comets = +3', 205, 270);
         ctx.fillStyle = '#ff0000'
         ctx.textAlign = "center";
-        ctx.fillText('Shield - Ignores negative point', 205, 400);
+        ctx.fillText('Shield - Ignores negative point', 205, 300);
         ctx.fillStyle = '#000dff'
         ctx.textAlign = "center";
-        ctx.fillText('Double - Twice the points', 205, 430);
+        ctx.fillText('Double - Twice the points', 205, 330);
         ctx.fillStyle = '#00ff0d'
         ctx.textAlign = "center";
-        ctx.fillText('Bomb - Clears all', 205, 460);
+        ctx.fillText('Bomb - Clears all', 205, 360);
 
         ctx.fillStyle = '#000000'
         ctx.font = 'bold 20px Arial';
-        ctx.fillText('Press SPACE to Start', 200, 490);
+        ctx.fillText('Press 1 for Singleplayer', 200, 430);
+        ctx.fillText('Press 2 for Multiplayer', 200, 460);
 
         requestAnimationFrame(gameLoop);
         return;
@@ -422,9 +442,15 @@ function gameLoop() {
         ctx.font = 'bold 50px Arial'
         ctx.fillText('GAME OVER', 50, 250);
 
-        ctx.font = '30px Arial'
-        ctx.fillText('Max Score: ' + maxScore, 90, 300)
-        ctx.fillText('Personal Best: ' + personalBest, 90, 340)
+        if (!multiplayer) {
+            ctx.font = '30px Arial'
+            ctx.fillText('Max Score: ' + maxScore, 90, 300)
+            ctx.fillText('Personal Best: ' + personalBest, 90, 340)
+        } else {
+            ctx. font = 'bold 30px Arial'
+            ctx. fillText(winner + ' WINS!!!', 80, 320);
+        }
+        
 
         ctx.fillText('Press R to Restart', 65, 380);
 
@@ -440,15 +466,21 @@ function gameLoop() {
     }
     updateItems();
 
-    drawPlayer(player);
+
     if (multiplayer) {
-        drawPlayer(player2);
+        drawPlayer(player, 'P1');
+        drawPlayer(player2, 'P2');
+    } else {
+        drawPlayer(player, '');
     }
+
     drawItems();
-    drawScore(score);
+
+    drawScore(score, 10);
     if (multiplayer) {
-        drawScore(score2);
+        drawScore(score2, 280);
     }
+
     drawPowerupMessage();
 
     requestAnimationFrame(gameLoop);
@@ -465,7 +497,7 @@ document.addEventListener('keydown', (e) => {
     if (gameOver && e.key.toLowerCase() === 'r') {
         location.reload();
     }
-    if (e.code === 'Space') {
+    if (e.code === '1') {
         multiplayer = false;
         gameStarted = true;
         startSpawning();
